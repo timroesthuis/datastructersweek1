@@ -1,0 +1,31 @@
+language: cpp
+compiler: gcc
+sudo: required
+dist: trusty
+
+
+env:
+  - TARGET_CPU=x64 BUILD_CONFIGURATION=Debug
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-8
+      - g++-8
+      - cppcheck
+
+script:
+  - export CC=gcc-8
+  - export CXX=g++-8
+  - cmake --version
+  # cppcheck - don't fail on error, cause it's flawed
+  - cppcheck --enable=warning,performance,portability,style --language=c++ --force --verbose --std=c++11 --error-exitcode=0 -I src/include/ src/include/*.h src/include/*.cpp
+  # build & run
+  - cmake -DTARGET_CPU=$TARGET_CPU -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DENABLE_SANITIZERS=OFF .
+  - cmake --build . --target tests_lists
+  - ctest -VV
+
+notifications:
+  email: false
